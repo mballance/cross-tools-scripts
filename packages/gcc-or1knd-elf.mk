@@ -16,6 +16,12 @@ GCC_OR1K_ELF_NEWLIB_PKG:=$(PKG_SRC_DIR)/newlib-2.2.0.20150225.tar.gz
 
 GCC_OR1K_ELF_BINUTILS_PKG:=$(PKG_SRC_DIR)/binutils-2.25.tar.bz2
 
+OR1K_SIM_PKG:=$(PKG_SRC_DIR)/or1ksim-or1k-master.zip
+OR1K_SIM_URL:=https://github.com/openrisc/or1ksim/archive/or1k-master.zip
+
+OR1K_GDB_PKG:=$(PKG_SRC_DIR)/binutils-gdb-or1k.zip
+OR1K_GDB_URL:=https://github.com/openrisc/binutils-gdb/archive/or1k.zip
+
 GCC_OR1K_ELF_PKG := $(PKG_RESULT_DIR)/$(GCC_OR1K_ELF_PKGNAME).tar.bz2
 GCC_OR1K_ELF_PKG_DIR := $(subst .tar.bz2,,$(GCC_OR1K_ELF_PKG))
 GCC_OR1K_ELF_BUILDDIR := $(BUILD_DIR)/gcc-or1k-elf-$(GCC_OR1K_ELF_VERSION)
@@ -23,6 +29,9 @@ GCC_PACKAGE_RESULTS += $(GCC_OR1K_ELF_PKG)
 GCC_PACKAGE_NAMES += gcc-or1k-elf
 
 GCC_OR1K_ELF_TARGET:=or1k-elf
+
+PATH:=$(TEXINFO_INSTDIR)/bin:$(PATH)
+export PATH
 
 else
 
@@ -41,31 +50,75 @@ $(GCC_OR1K_ELF_NEWLIB_PKG) :
 	$(Q)$(MK_PKG_SRC_DIR)
 	$(Q)echo "Download $(GCC_OR1K_ELF_NEWLIB_SRC_URL)"
 	$(Q)$(WGET) -O $@ $(GCC_OR1K_ELF_NEWLIB_SRC_URL)
-	
 
-	
 $(GCC_OR1K_ELF_BINUTILS_PKG) : 
 	$(Q)$(MK_PKG_SRC_DIR)
 	$(Q)echo "Download $(GCC_OR1K_ELF_BINUTILS_SRC_URL)"
 	$(Q)$(WGET) -O $@ $(GCC_OR1K_ELF_BINUTILS_SRC_URL)
+
+$(OR1K_SIM_PKG) :
+	$(Q)$(MK_PKG_SRC_DIR)
+	$(Q)echo "Download $(OR1K_SIM_URL)"
+	$(Q)$(WGET) -O $@ $(OR1K_SIM_URL)
+
+$(OR1K_GDB_PKG) :
+	$(Q)$(MK_PKG_SRC_DIR)
+	$(Q)echo "Download $(OR1K_GDB_URL)"
+	$(Q)$(WGET) -O $@ $(OR1K_GDB_URL)
 
 GCC_OR1K_ELF_PKG_DEPS := $(GCC_OR1K_ELF_OR1K_SRC_PKG) \
   $(GCC_OR1K_ELF_OR1K_GCC_PKG) \
   $(GCC_OR1K_ELF_NEWLIB_PKG)   \
   $(GCC_OR1K_ELF_BINUTILS_PKG)
 
-$(GCC_OR1K_ELF_PKG) : $(BUILD_DIR)/gcc-or1k-elf.build
+$(GCC_OR1K_ELF_PKG) : \
+  $(BUILD_DIR)/gcc-or1k-elf.build \
+  $(BUILD_DIR)/or1ksim.build \
+  $(BUILD_DIR)/gdb-or1k.build
 	$(Q)echo "Copying GCC or1k Result Files"
 	$(Q)rm -rf $(GCC_OR1K_ELF_PKG_DIR)
 	$(Q)mkdir -p $(GCC_OR1K_ELF_PKG_DIR)
 	$(Q)mkdir -p $(GCC_OR1K_ELF_PKG_DIR)/gcc-or1k-elf-$(GCC_OR1K_ELF_VERSION)-$(BUILD_ARCH)
 	$(Q)cp -r $(BUILD_DIR)/gcc-or1k-elf/installdir/* \
 		$(GCC_OR1K_ELF_PKG_DIR)/gcc-or1k-elf-$(GCC_OR1K_ELF_VERSION)-$(BUILD_ARCH)
+	$(Q)cp -r $(BUILD_DIR)/or1k-sim/installdir/* \
+		$(GCC_OR1K_ELF_PKG_DIR)/gcc-or1k-elf-$(GCC_OR1K_ELF_VERSION)-$(BUILD_ARCH)
+	$(Q)cp -r $(BUILD_DIR)/gdb-or1k/installdir/* \
+		$(GCC_OR1K_ELF_PKG_DIR)/gcc-or1k-elf-$(GCC_OR1K_ELF_VERSION)-$(BUILD_ARCH)
 	$(Q)echo "Packing $@"
 	$(Q)cd $(GCC_OR1K_ELF_PKG_DIR) ; \
 		$(TARBZ) $@ gcc-or1k-elf-$(GCC_OR1K_ELF_VERSION)-$(BUILD_ARCH)
 	$(Q)rm -rf $(GCC_OR1K_ELF_PKG_DIR)
-	
+
+$(BUILD_DIR)/or1ksim.build : $(OR1K_SIM_PKG)
+	$(Q)$(MKDIRS)
+	$(Q)mkdir -p $(BUILD_DIR)/or1k-sim
+	$(Q)echo "Unpacking or1ksim"
+	$(Q)rm -rf $(BUILD_DIR)/or1k-sim/or1ksim-or1k-master
+	$(Q)cd $(BUILD_DIR)/or1k-sim ; unzip $^
+	$(Q)cd $(BUILD_DIR)/or1k-sim/or1ksim-or1k-master ; \
+		./configure --prefix=$(BUILD_DIR)/or1k-sim/installdir
+	$(Q)cd $(BUILD_DIR)/or1k-sim/or1ksim-or1k-master ; $(MAKE)
+	$(Q)cd $(BUILD_DIR)/or1k-sim/or1ksim-or1k-master ; $(MAKE) install
+	$(Q)cd $(BUILD_DIR)/or1k-sim/installdir/bin; mv sim or1k-sim 
+	$(Q)cd $(BUILD_DIR)/or1k-sim/installdir/bin; mv profile or1k-profile 
+	$(Q)cd $(BUILD_DIR)/or1k-sim/installdir/bin; mv mprofile or1k-mprofile 
+	$(Q)touch $@
+
+$(BUILD_DIR)/gdb-or1k.build : $(OR1K_GDB_PKG)
+	$(Q)$(MKDIRS)
+	$(Q)mkdir -p $(BUILD_DIR)/gdb-or1k
+	$(Q)rm -rf $(BUILD_DIR)/gdb-or1k/binutils-gdb-or1k
+	$(Q)cd $(BUILD_DIR)/gdb-or1k ; unzip $^
+	$(Q)cd $(BUILD_DIR)/gdb-or1k/binutils-gdb-or1k; \
+		./configure --prefix=$(BUILD_DIR)/gdb-or1k/installdir \
+        --disable-itcl --disable-tk --disable-tcl --disable-winsup \
+        --disable-gdbtk --disable-libgui --disable-rda --disable-sid \
+        --with-sysroot --disable-newlib --disable-libgloss --disable-gas \
+        --disable-ld --disable-binutils --disable-gprof --with-system-zlib
+	$(Q)cd $(BUILD_DIR)/gdb-or1k/binutils-gdb-or1k; $(MAKE)
+	$(Q)cd $(BUILD_DIR)/gdb-or1k/binutils-gdb-or1k; $(MAKE) install
+	$(Q)touch $@
 
 $(BUILD_DIR)/gcc-or1k-elf/binutils.build : $(GCC_OR1K_ELF_BINUTILS_PKG)
 	$(Q)$(MKDIRS)

@@ -84,7 +84,8 @@ $(BUILD_DIR)/mpc/mpc.build : \
 	$(Q)cd $(BUILD_DIR)/mpc/mpc-$(MPC_VERSION); $(MAKE) install
 	$(Q)touch $@
 
-$(BUILD_DIR)/mpfr/mpfr.build : $(MPFR_PKG)
+$(BUILD_DIR)/mpfr/mpfr.build : $(MPFR_PKG) \
+	$(BUILD_DIR)/gmp/gmp.build 
 	$(Q)$(MKDIRS)
 	$(Q)rm -rf $(BUILD_DIR)/mpfr
 	$(Q)mkdir -p $(BUILD_DIR)/mpfr

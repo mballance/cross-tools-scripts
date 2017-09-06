@@ -2,7 +2,7 @@
 ifneq (true,$(RULES))
 
 # Definitions for packages
-GCC_RISCV64_ELF_VERSION := 4.9.2
+GCC_RISCV64_ELF_VERSION := 7.1.1
 GCC_RISCV64_PKGNAME := gcc-riscv64-elf
 GCC_RISCV64_ELF_PKGNAME := $(GCC_RISCV64_PKGNAME)-$(GCC_RISCV64_ELF_VERSION)-$(BUILD_ARCH)
 RISCV_GNU_TOOLCHAIN_URL:=https://github.com/riscv/riscv-gnu-toolchain

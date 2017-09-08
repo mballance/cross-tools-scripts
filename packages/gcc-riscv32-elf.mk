@@ -5,8 +5,18 @@ ifneq (true,$(RULES))
 GCC_RISCV32_ELF_VERSION := 7.1.1
 GCC_RISCV32_PKGNAME := gcc-riscv32-elf
 GCC_RISCV32_ELF_PKGNAME := $(GCC_RISCV32_PKGNAME)-$(GCC_RISCV32_ELF_VERSION)-$(BUILD_ARCH)
-RISCV_GNU_TOOLCHAIN_URL:=https://github.com/riscv/riscv-gnu-toolchain
-RISCV_GNU_TOOLCHAIN_SRC:=$(PKG_SRC_DIR)/riscv-gnu-toolchain.tar.gz
+
+RISCV_BINUTILS_URL:=https://github.com/riscv/riscv-binutils-gdb/archive/riscv-binutils-2.29.zip
+RISCV_BINUTILS_DIR:=riscv-binutils-gdb-riscv-binutils-2.29
+RISCV_BINUTILS_SRC:=$(PKG_SRC_DIR)/$(RISCV_BINUTILS_DIR).zip
+
+RISCV_GCC_URL:=https://github.com/riscv/riscv-gcc/archive/riscv-gcc-7.zip
+RISCV_GCC_DIR:=riscv-gcc-riscv-gcc-7
+RISCV_GCC_ZIP:=$(PKG_SRC_DIR)/$(RISCV_GCC_DIR).zip
+
+RISCV_NEWLIB_URL:=https://github.com/riscv/riscv-newlib/archive/riscv-newlib-2.5.0.zip
+RISCV_NEWLIB_DIR:=riscv-newlib-riscv-newlib-2.5.0
+RISCV_NEWLIB_ZIP:=$(PKG_SRC_DIR)/$(RISCV_NEWLIB_DIR).zip
 
 GCC_RISCV32_ELF_PKG := $(PKG_RESULT_DIR)/$(GCC_RISCV32_ELF_PKGNAME).tar.bz2
 GCC_RISCV32_ELF_PKG_DIR := $(subst .tar.bz2,,$(GCC_RISCV32_ELF_PKG))
@@ -14,7 +24,7 @@ GCC_RISCV32_ELF_BUILDDIR := $(BUILD_DIR)/gcc-riscv32-elf-$(GCC_RISCV32_ELF_VERSI
 GCC_PACKAGE_RESULTS += $(GCC_RISCV32_ELF_PKG)
 GCC_PACKAGE_NAMES += $(GCC_RISCV32_PKGNAME)
 
-GCC_RISCV32_ELF_TARGET:=riscv32-elf
+GCC_RISCV32_ELF_TARGET:=riscv32-unknown-elf
 
 PATH:=$(TEXINFO_INSTDIR)/bin:$(PATH)
 export PATH
@@ -22,17 +32,13 @@ export PATH
 else
 
 # Rules for packages
-$(RISCV_GNU_TOOLCHAIN_SRC) : 
+
+$(RISCV_BINUTILS_SRC) :
 	$(Q)$(MK_PKG_SRC_DIR)
-	$(Q)echo "Download $(RISCV_GNU_TOOLCHAIN_SRC)"
-	$(Q)cd $(PKG_SRC_DIR) ; git clone --recursive $(RISCV_GNU_TOOLCHAIN_URL)
-	$(Q)cd $(PKG_SRC_DIR)/`basename $(RISCV_GNU_TOOLCHAIN_URL)` ; \
-		git submodule update --init --recursive
-	$(Q)cd $(PKG_SRC_DIR) ; tar czf \
-      `basename $(RISCV_GNU_TOOLCHAIN_URL)`.tar.gz \
-      `basename $(RISCV_GNU_TOOLCHAIN_URL)`
-	
-GCC_RISCV32_ELF_PKG_DEPS := $(RISCV_GNU_TOOLCHAIN_SRC) \
+	$(Q)echo "Download $(RISCV_BINUTILS_SRC)"
+	$(Q)$(WGET) -O $@ $(RISCV_BINUTILS_URL)
+
+GCC_RISCV32_ELF_PKG_DEPS := \
   $(GCC_RISCV32_ELF_OR1K_GCC_PKG) \
   $(GCC_RISCV32_ELF_NEWLIB_PKG)   \
   $(GCC_RISCV32_ELF_BINUTILS_PKG)
@@ -51,52 +57,47 @@ $(GCC_RISCV32_ELF_PKG) : \
 	$(Q)rm -rf $(GCC_RISCV32_ELF_PKG_DIR)
 
 
-#$(BUILD_DIR)/gdb-riscv.build : $(OR1K_GDB_PKG)
-#	$(Q)$(MKDIRS)
-#	$(Q)mkdir -p $(BUILD_DIR)/gdb-or1k
-#	$(Q)rm -rf $(BUILD_DIR)/gdb-or1k/binutils-gdb-or1k
-#	$(Q)cd $(BUILD_DIR)/gdb-or1k ; unzip $^
-#	$(Q)cd $(BUILD_DIR)/gdb-or1k/binutils-gdb-or1k; \
-#		./configure --prefix=$(BUILD_DIR)/gdb-or1k/installdir \
-#        --disable-itcl --disable-tk --disable-tcl --disable-winsup \
-#        --disable-gdbtk --disable-libgui --disable-rda --disable-sid \
-#        --with-sysroot --disable-newlib --disable-libgloss --disable-gas \
-#        --disable-ld --disable-binutils --disable-gprof --with-system-zlib
-#	$(Q)cd $(BUILD_DIR)/gdb-or1k/binutils-gdb-or1k; $(MAKE)
-#	$(Q)cd $(BUILD_DIR)/gdb-or1k/binutils-gdb-or1k; $(MAKE) install
-#	$(Q)touch $@
-
 $(BUILD_DIR)/gcc-riscv32-elf/binutils.build : \
-		$(BUILD_DIR)/gcc-riscv32-elf/riscv-gnu-toolchain.unpack
+		$(BUILD_DIR)/gcc-riscv32-elf/binutils.unpack
 	$(Q)$(MKDIRS)
 	$(Q)echo "Configuring binutils"
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv32-elf/binutils 
 	$(Q)mkdir -p $(BUILD_DIR)/gcc-riscv32-elf/binutils 
 	$(Q)cd $(BUILD_DIR)/gcc-riscv32-elf/binutils; \
 		export CFLAGS=-Wno-error=discarded-qualifiers; \
-	  ../riscv-gnu-toolchain/riscv-binutils-gdb/configure \
+	  ../$(RISCV_BINUTILS_DIR)/configure \
 		--prefix=$(BUILD_DIR)/gcc-riscv32-elf/installdir \
 	    --target=$(GCC_RISCV32_ELF_TARGET) --disable-tcl --disable-tk \
 	    --disable-itcl --disable-gdbtk --disable-winsup --disable-libgui \
-	    --disable-rda --disable-sid --disable-sim --with-sysroot 
+	    --disable-rda --disable-sid --disable-sim --with-sysroot
 	$(Q)cd $(BUILD_DIR)/gcc-riscv32-elf/binutils ; $(MAKE) 
 	$(Q)cd $(BUILD_DIR)/gcc-riscv32-elf/binutils ; $(MAKE) install
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv32-elf/binutils
 	$(Q)touch $@
 
-$(BUILD_DIR)/gcc-riscv32-elf/riscv-gnu-toolchain.unpack : \
-	$(RISCV_GNU_TOOLCHAIN_SRC)
+$(BUILD_DIR)/gcc-riscv32-elf/binutils.unpack : $(RISCV_BINUTILS_SRC)
 	$(Q)$(MKDIRS)
 	$(Q)mkdir -p $(BUILD_DIR)/gcc-riscv32-elf
-	$(Q)echo "Unpacking riscv-gnu-toolchain"
-	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv32-elf/riscv-gnu-toolchain
-	$(Q)cd $(BUILD_DIR)/gcc-riscv32-elf ; $(UNTARGZ) $(RISCV_GNU_TOOLCHAIN_SRC)
+	$(Q)cd $(BUILD_DIR)/gcc-riscv32-elf ; unzip -o $(RISCV_BINUTILS_SRC)
 	$(Q)touch $@
+
+$(RISCV_GCC_ZIP) :
+	$(Q)$(MKDIRS)
+	$(Q)$(WGET) -O $@ $(RISCV_GCC_URL)
+
+$(BUILD_DIR)/gcc-riscv32-elf/riscv-gcc.unpack : $(RISCV_GCC_ZIP)
+	$(Q)$(MKDIRS)
+	$(Q)mkdir -p $(BUILD_DIR)/gcc-riscv32-elf
+	$(Q)echo "Unpacking riscv-gcc"
+	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv32-elf/$(RISCV_GCC_DIR)
+	$(Q)cd $(BUILD_DIR)/gcc-riscv32-elf ; unzip -o $^
+	$(Q)touch $@
+
 	
 $(BUILD_DIR)/gcc-riscv32-elf/gcc_phase1.build : \
 		$(GCC_DEPS) \
 		$(BUILD_DIR)/gcc-riscv32-elf/binutils.build \
-		$(BUILD_DIR)/gcc-riscv32-elf/riscv-gnu-toolchain.unpack
+		$(BUILD_DIR)/gcc-riscv32-elf/riscv-gcc.unpack
 	$(Q)$(MKDIRS)
 	$(Q)echo "Configuring GCC"
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv32-elf/gcc
@@ -104,7 +105,7 @@ $(BUILD_DIR)/gcc-riscv32-elf/gcc_phase1.build : \
 	$(Q)cd $(BUILD_DIR)/gcc-riscv32-elf/gcc ; \
 	    export PATH="$(BUILD_DIR)/gcc-riscv32-elf/installdir/bin:$(PATH)"; \
 		export CFLAGS=-Wno-error=discarded-qualifiers; \
-	    ../riscv-gnu-toolchain/riscv-gcc/configure \
+	    ../$(RISCV_GCC_DIR)/configure \
 		--target=$(GCC_RISCV32_ELF_TARGET) \
 	    --prefix=$(BUILD_DIR)/gcc-riscv32-elf/installdir \
 	    --enable-languages=c --disable-shared --disable-libssp \
@@ -118,16 +119,25 @@ $(BUILD_DIR)/gcc-riscv32-elf/gcc_phase1.build : \
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv32-elf/gcc
 	$(Q)touch $@
 
+$(RISCV_NEWLIB_ZIP) :
+	$(Q)$(MKDIRS)
+	$(Q)$(WGET) -O $@ $(RISCV_NEWLIB_URL)
+
+$(BUILD_DIR)/gcc-riscv32-elf/riscv-newlib.unpack : $(RISCV_NEWLIB_ZIP)
+	$(Q)$(MKDIRS)
+	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv32-elf/$(RISCV_NEWLIB_DIR)
+	$(Q)cd $(BUILD_DIR)/gcc-riscv32-elf ; unzip -o $^
+
 $(BUILD_DIR)/gcc-riscv32-elf/newlib.build : \
 	$(BUILD_DIR)/gcc-riscv32-elf/gcc_phase1.build \
-		$(BUILD_DIR)/gcc-riscv32-elf/riscv-gnu-toolchain.unpack
+	$(BUILD_DIR)/gcc-riscv32-elf/riscv-newlib.unpack
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv32-elf/newlib
 	$(Q)mkdir -p $(BUILD_DIR)/gcc-riscv32-elf/newlib
 	$(Q)echo "Configuring newlib"
 	$(Q)cd $(BUILD_DIR)/gcc-riscv32-elf/newlib ; \
 	    export PATH="$(BUILD_DIR)/gcc-riscv32-elf/installdir/bin:$(PATH)"; \
 		export CFLAGS=-Wno-error=discarded-qualifiers; \
-	    ../riscv-gnu-toolchain/riscv-newlib/configure \
+	    ../$(RISCV_NEWLIB_DIR)/configure \
 			--prefix=$(BUILD_DIR)/gcc-riscv32-elf/installdir \
 			--target=$(GCC_RISCV32_ELF_TARGET) 
 	$(Q)echo "Building newlib"
@@ -147,7 +157,7 @@ $(BUILD_DIR)/gcc-riscv32-elf/gcc_phase2.build : \
 	$(Q)mkdir -p $(BUILD_DIR)/gcc-riscv32-elf/gcc-phase2
 	$(Q)cd $(BUILD_DIR)/gcc-riscv32-elf/gcc-phase2; \
 		export CFLAGS=-Wno-error=discarded-qualifiers; \
-	  ../riscv-gnu-toolchain/riscv-gcc/configure \
+	  ../$(RISCV_GCC_DIR)/configure \
 		--target=$(GCC_RISCV32_ELF_TARGET) \
 	    --prefix=$(BUILD_DIR)/gcc-riscv32-elf/installdir \
 	    --enable-languages=c,c++ --disable-shared --disable-libssp \

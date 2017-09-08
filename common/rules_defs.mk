@@ -1,4 +1,6 @@
 
+COMMON_DIR := $(shell cd $(dir $(lastword $(MAKEFILE_LIST))); pwd)
+
 ifneq (true,$(RULES))
 
 ifeq (,$(BUILD_ARCH))

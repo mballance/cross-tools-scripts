@@ -11,6 +11,8 @@ GMP_SRC_URL:=$(GNU_MIRROR_URL)/gmp/gmp-$(GMP_VERSION).tar.bz2
 MPFR_SRC_URL:=$(GNU_MIRROR_URL)/mpfr/mpfr-$(MPFR_VERSION).tar.bz2
 MPC_SRC_URL:=$(GNU_MIRROR_URL)/mpc/mpc-$(MPC_VERSION).tar.gz
 TEXINFO_SRC_URL:=$(GNU_MIRROR_URL)/texinfo/texinfo-$(TEXINFO_VERSION).tar.gz
+TEXINFO_PATCH:=$(COMMON_DIR)/texinfo-6.3.patch
+
 
 GMP_PKG:=$(PKG_SRC_DIR)/gmp-$(GMP_VERSION).tar.bz2
 MPFR_PKG:=$(PKG_SRC_DIR)/mpfr-$(MPFR_VERSION).tar.bz2
@@ -63,7 +65,8 @@ $(BUILD_DIR)/gmp/gmp.build : $(GMP_PKG)
 	$(Q)cd $(BUILD_DIR)/gmp ; $(UNTARBZ2) $(GMP_PKG)
 	$(Q)cd $(BUILD_DIR)/gmp/gmp-$(GMP_VERSION); \
 	  export ABI=$(ABI); \
-	  ./configure --prefix=$(GMP_INSTDIR) --disable-shared 
+	  ./configure --prefix=$(GMP_INSTDIR) --disable-shared \
+	  	--disable-assembly
 	$(Q)cd $(BUILD_DIR)/gmp/gmp-$(GMP_VERSION); $(MAKE)
 	$(Q)cd $(BUILD_DIR)/gmp/gmp-$(GMP_VERSION); $(MAKE) install
 	$(Q)touch $@
@@ -102,6 +105,8 @@ $(BUILD_DIR)/texinfo/texinfo.build : $(TEXINFO_PKG)
 	$(Q)rm -rf $(BUILD_DIR)/texinfo
 	$(Q)mkdir -p $(BUILD_DIR)/texinfo
 	$(Q)cd $(BUILD_DIR)/texinfo ; $(UNTARGZ) $(TEXINFO_PKG)
+	$(Q)cd $(BUILD_DIR)/texinfo/texinfo-$(TEXINFO_VERSION); \
+		patch -p1 -i $(TEXINFO_PATCH)
 	$(Q)cd $(BUILD_DIR)/texinfo/texinfo-$(TEXINFO_VERSION); \
 	  ./configure --prefix=$(TEXINFO_INSTDIR)
 	$(Q)cd $(BUILD_DIR)/texinfo/texinfo-$(TEXINFO_VERSION); $(MAKE)

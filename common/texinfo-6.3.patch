@@ -1,0 +1,21 @@
+diff -rcNB texinfo-6.3.orig/info/pcterm.c texinfo-6.3/info/pcterm.c
+*** texinfo-6.3.orig/info/pcterm.c	2016-09-03 06:09:25.000000000 -0700
+--- texinfo-6.3/info/pcterm.c	2017-09-07 13:35:39.601131800 -0700
+***************
+*** 1619,1624 ****
+--- 1619,1626 ----
+    else
+      return -1;
+  }
++ 
++ #ifndef __MINGW32__
+  
+  /* These should never be called, but they make the linker happy.  */
+  
+***************
+*** 1661,1663 ****
+--- 1663,1666 ----
+  {
+    perror ("tcsetattr"); return 0;
+  }
++ #endif /* __MINGW32__ */

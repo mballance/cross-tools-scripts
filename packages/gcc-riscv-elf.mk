@@ -85,10 +85,10 @@ $(BUILD_DIR)/gcc-riscv%-elf/gcc_phase1.build : \
 		$(BUILD_DIR)/gcc-riscv-elf/riscv-gcc.unpack
 	$(Q)$(MKDIRS)
 	$(Q)echo "Configuring GCC"
-	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv%-elf/gcc
-	$(Q)mkdir $(BUILD_DIR)/gcc-riscv%-elf/gcc
-	$(Q)cd $(BUILD_DIR)/gcc-riscv%-elf/gcc ; \
-	    export PATH="$(BUILD_DIR)/gcc-riscv%-elf/installdir/bin:$(PATH)"; \
+	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc
+	$(Q)mkdir $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc
+	$(Q)cd $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc ; \
+	    export PATH="$(BUILD_DIR)/gcc-riscv$(*)-elf/installdir/bin:$(PATH)"; \
 		export CFLAGS=-Wno-error=discarded-qualifiers; \
 	    ../../gcc-riscv-elf/$(RISCV_GCC_DIR)/configure \
 		--target=riscv$(*)-unknown-elf \
@@ -113,6 +113,8 @@ $(BUILD_DIR)/gcc-riscv-elf/riscv-newlib.unpack : $(RISCV_NEWLIB_ZIP)
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv-elf/$(RISCV_NEWLIB_DIR)
 	$(Q)echo "Unpacking $(RISCV_NEWLIB_ZIP)"
 	$(Q)cd $(BUILD_DIR)/gcc-riscv-elf ; $(UNZIP) $^
+	$(Q)touch $@
+
 
 $(BUILD_DIR)/gcc-riscv%-elf/newlib.build : \
 	$(BUILD_DIR)/gcc-riscv%-elf/gcc_phase1.build \
@@ -136,13 +138,14 @@ $(BUILD_DIR)/gcc-riscv%-elf/newlib.build : \
 			$(MAKE) install
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv$(*)-elf/newlib
 	$(Q)touch $@
+
 	
 $(BUILD_DIR)/gcc-riscv%-elf/gcc_phase2.build : \
 	$(BUILD_DIR)/gcc-riscv%-elf/newlib.build 
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc-phase2
 	$(Q)mkdir -p $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc-phase2
 	$(Q)cd $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc-phase2; \
-		export CFLAGS=-Wno-error=discarded-qualifiers; \
+      export CFLAGS=-Wno-error=discarded-qualifiers;  \
 	  ../../gcc-riscv-elf/$(RISCV_GCC_DIR)/configure \
 		--target=riscv$(*)-unknown-elf \
 	    --prefix=$(BUILD_DIR)/gcc-riscv$(*)-elf/installdir \

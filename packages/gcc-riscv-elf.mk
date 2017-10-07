@@ -34,7 +34,7 @@ $(PKG_RESULT_DIR)/gcc-riscv%-elf.tar.bz2 : $(BUILD_DIR)/gcc-riscv%-elf.build
 	$(Q)mkdir -p $(PKG_RESULT_DIR)/gcc-riscv$(*)-elf
 	$(Q)mkdir -p $(PKG_RESULT_DIR)/gcc-riscv$(*)-elf/gcc-riscv$(*)-elf-$(GCC_RISCV_ELF_VERSION)-$(BUILD_ARCH)
 	$(Q)cp -r $(BUILD_DIR)/gcc-riscv$(*)-elf/installdir/* \
-		$(GCC_RISCV32_ELF_PKG_DIR)/gcc-riscv$(*)-elf-$(GCC_RISCV_ELF_VERSION)-$(BUILD_ARCH)
+		$(PKG_RESULT_DIR)/gcc-riscv$(*)-elf/gcc-riscv$(*)-elf-$(GCC_RISCV_ELF_VERSION)-$(BUILD_ARCH)
 	$(Q)echo "Packing $@"
 	$(Q)cd $(PKG_RESULT_DIR)/gcc-riscv$(*)-elf ; \
 		$(TARBZ) $@ gcc-riscv$(*)-elf-$(GCC_RISCV_ELF_VERSION)-$(BUILD_ARCH)
@@ -142,6 +142,7 @@ $(BUILD_DIR)/gcc-riscv%-elf/newlib.build : \
 	
 $(BUILD_DIR)/gcc-riscv%-elf/gcc_phase2.build : \
 	$(BUILD_DIR)/gcc-riscv%-elf/newlib.build 
+	$(Q)echo "Building gcc-riscv$(*) gcc_phase2"
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc-phase2
 	$(Q)mkdir -p $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc-phase2
 	$(Q)cd $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc-phase2; \

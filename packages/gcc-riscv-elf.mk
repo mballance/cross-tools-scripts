@@ -42,6 +42,7 @@ $(PKG_RESULT_DIR)/gcc-riscv%-elf.tar.bz2 : $(BUILD_DIR)/gcc-riscv%-elf.build
 
 
 $(BUILD_DIR)/gcc-riscv%-elf/binutils.build : \
+		$(GCC_DEPS) \
 		$(BUILD_DIR)/gcc-riscv-elf/binutils.unpack
 	$(Q)$(MKDIRS)
 	$(Q)echo "Configuring binutils"

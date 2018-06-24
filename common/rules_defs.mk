@@ -16,7 +16,7 @@ CONFIG_HOST:=x86_64-unknown-linux-gnu
 endif
 
 ifeq (,$(COMMON_MIRROR_URL))
-COMMON_MIRROR_URL := ftp://mirrors.kernel.org
+COMMON_MIRROR_URL := http://mirrors.kernel.org
 endif
 
 ifeq (,$(GNU_MIRROR_URL))

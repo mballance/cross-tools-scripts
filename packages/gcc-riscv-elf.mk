@@ -8,9 +8,10 @@ RISCV_BINUTILS_URL:=https://github.com/riscv/riscv-binutils-gdb/archive/riscv-bi
 RISCV_BINUTILS_DIR:=riscv-binutils-gdb-riscv-binutils-2.29
 RISCV_BINUTILS_SRC:=$(PKG_SRC_DIR)/$(RISCV_BINUTILS_DIR).zip
 
-RISCV_GCC_URL:=https://github.com/riscv/riscv-gcc/archive/riscv-gcc-7.zip
-RISCV_GCC_DIR:=riscv-gcc-riscv-gcc-7
-RISCV_GCC_ZIP:=$(PKG_SRC_DIR)/$(RISCV_GCC_DIR).zip
+#RISCV_GCC_URL:=https://github.com/riscv/riscv-gcc/archive/riscv-gcc-7.zip
+RISCV_GCC_URL:=https://github.com/riscv/riscv-gcc/archive/gcc-7_3_0-release.zip
+RISCV_GCC_DIR:=riscv-gcc-gcc-7_3_0-release
+RISCV_GCC_ZIP:=$(PKG_SRC_DIR)/gcc-7_3_0-release.zip
 
 RISCV_NEWLIB_URL:=https://github.com/riscv/riscv-newlib/archive/riscv-newlib-2.5.0.zip
 RISCV_NEWLIB_DIR:=riscv-newlib-riscv-newlib-2.5.0
@@ -22,6 +23,8 @@ export PATH
 else
 
 # Rules for packages
+#
+# EXTRA_CFLAGS:="export CFLAGS=-Wno-error=discarded-qualifiers";
 
 $(RISCV_BINUTILS_SRC) :
 	$(Q)$(MK_PKG_SRC_DIR)
@@ -49,7 +52,7 @@ $(BUILD_DIR)/gcc-riscv%-elf/binutils.build : \
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv$(*)-elf/binutils 
 	$(Q)mkdir -p $(BUILD_DIR)/gcc-riscv$(*)-elf/binutils 
 	$(Q)cd $(BUILD_DIR)/gcc-riscv$(*)-elf/binutils; \
-		export CFLAGS=-Wno-error=discarded-qualifiers; \
+		$(EXTRA_CFLAGS) \
 	  ../../gcc-riscv-elf/$(RISCV_BINUTILS_DIR)/configure \
 		--prefix=$(BUILD_DIR)/gcc-riscv$(*)-elf/installdir \
 	    --target=riscv$(*)-unknown-elf --disable-tcl --disable-tk \
@@ -90,7 +93,7 @@ $(BUILD_DIR)/gcc-riscv%-elf/gcc_phase1.build : \
 	$(Q)mkdir $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc
 	$(Q)cd $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc ; \
 	    export PATH="$(BUILD_DIR)/gcc-riscv$(*)-elf/installdir/bin:$(PATH)"; \
-		export CFLAGS=-Wno-error=discarded-qualifiers; \
+		$(EXTRA_CFLAGS) \
 	    ../../gcc-riscv-elf/$(RISCV_GCC_DIR)/configure \
 		--target=riscv$(*)-unknown-elf \
 	    --prefix=$(BUILD_DIR)/gcc-riscv$(*)-elf/installdir \
@@ -125,7 +128,7 @@ $(BUILD_DIR)/gcc-riscv%-elf/newlib.build : \
 	$(Q)echo "Configuring newlib"
 	$(Q)cd $(BUILD_DIR)/gcc-riscv$(*)-elf/newlib ; \
 	    export PATH="$(BUILD_DIR)/gcc-riscv$(*)-elf/installdir/bin:$(PATH)"; \
-		export CFLAGS=-Wno-error=discarded-qualifiers; \
+		$(EXTRA_CFLAGS) \
 	    ../../gcc-riscv-elf/$(RISCV_NEWLIB_DIR)/configure \
 			--prefix=$(BUILD_DIR)/gcc-riscv$(*)-elf/installdir \
 			--target=riscv$(*)-unknown-elf
@@ -147,7 +150,7 @@ $(BUILD_DIR)/gcc-riscv%-elf/gcc_phase2.build : \
 	$(Q)rm -rf $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc-phase2
 	$(Q)mkdir -p $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc-phase2
 	$(Q)cd $(BUILD_DIR)/gcc-riscv$(*)-elf/gcc-phase2; \
-      export CFLAGS=-Wno-error=discarded-qualifiers;  \
+          $(EXTRA_CFLAGS) \
 	  ../../gcc-riscv-elf/$(RISCV_GCC_DIR)/configure \
 		--target=riscv$(*)-unknown-elf \
 	    --prefix=$(BUILD_DIR)/gcc-riscv$(*)-elf/installdir \
